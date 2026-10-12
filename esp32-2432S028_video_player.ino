@@ -107,13 +107,7 @@ void setup()
 
     // SD card initialization
     Serial.println("SD Card initialization (display=HSPI, SD=VSPI)");
-    if (!sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS))
-    {
-        Serial.println("ERROR: SD SPI initialization failed!");
-        const char *lines[] = {"SD card unavailable", "Check card/device", "and reset device."};
-        showCenteredMessage(lines, sizeof(lines) / sizeof(lines[0]));
-        return;
-    }
+    sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
     if (!SD.begin(SD_CS, sd_spi, SD_SPI_SPEED, "/sd") || SD.cardType() == CARD_NONE)
     {
         Serial.println("ERROR: SD card not found or file system mount failed!");
@@ -195,7 +189,13 @@ void showCenteredMessage(const char *const lines[], uint8_t lineCount)
     gfx->setTextWrap(false);
     for (uint8_t i = 0; i < lineCount; i++)
     {
-        gfx->printCenterText(lines[i], gfx->width() / 2, y);
+        int16_t x1, y1;
+        uint16_t w, h;
+        gfx->getTextBounds(lines[i], 0, 0, &x1, &y1, &w, &h);
+        gfx->setCursor(
+            gfx->width() / 2 - w / 2 - x1,
+            y - h / 2 - y1);
+        gfx->print(lines[i]);
         y += lineSpacing;
     }
 }
